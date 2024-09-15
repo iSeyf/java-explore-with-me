@@ -25,7 +25,7 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
-        if (start.isAfter(end)){
+        if (start.isAfter(end)) {
             throw new BadRequestException("Дата начала не может быть позже даты окончания.");
         }
         if (unique) {
