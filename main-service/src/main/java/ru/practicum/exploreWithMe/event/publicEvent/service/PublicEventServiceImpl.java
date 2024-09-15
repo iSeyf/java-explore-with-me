@@ -76,6 +76,13 @@ public class PublicEventServiceImpl implements PublicEventService {
         } else {
             page = repository.findAllByPublicFilters(text, categories, paid, start, end, sortValue.toString(), PageRequest.of(from, size));
         }
+
+        statsClient.addHit(new EndpointHitDto(
+                "main-service",
+                request.getRequestURI(),
+                request.getRemoteAddr(),
+                LocalDateTime.now())
+        );
         return EventMapper.toEventShortDtoList(page.getContent());
     }
 

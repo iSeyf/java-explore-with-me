@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.exploreWithMe.dto.EndpointHitDto;
 import ru.practicum.exploreWithMe.dto.ViewStatsDto;
+import ru.practicum.exploreWithMe.error.exceptions.BadRequestException;
 import ru.practicum.exploreWithMe.mapper.Mapper;
 import ru.practicum.exploreWithMe.model.EndpointHit;
 import ru.practicum.exploreWithMe.repository.StatsRepository;
@@ -24,6 +25,9 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
+        if (start.isAfter(end)){
+            throw new BadRequestException("Дата начала не может быть позже даты окончания.");
+        }
         if (unique) {
             if (uris == null || uris.isEmpty()) {
                 return Mapper.toViewStatsDtoList(repository.findUniqueIpStatsBetweenDates(start, end));
