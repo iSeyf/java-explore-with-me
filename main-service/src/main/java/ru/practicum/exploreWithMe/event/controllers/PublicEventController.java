@@ -1,4 +1,4 @@
-package ru.practicum.exploreWithMe.event.publicEvent.controller;
+package ru.practicum.exploreWithMe.event.controllers;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.exploreWithMe.event.publicEvent.service.PublicEventService;
+import ru.practicum.exploreWithMe.event.service.EventService;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ import java.util.List;
 @RequestMapping(path = "/events")
 @RequiredArgsConstructor
 public class PublicEventController {
-    private final PublicEventService service;
+    private final EventService service;
 
     @GetMapping
     public ResponseEntity<Object> searchEventsPublic(@RequestParam(required = false) String text,

@@ -1,4 +1,4 @@
-package ru.practicum.exploreWithMe.compilation.adminCompilation.controller;
+package ru.practicum.exploreWithMe.compilation.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.exploreWithMe.compilation.adminCompilation.service.AdminCompilationService;
+import ru.practicum.exploreWithMe.compilation.service.CompilationService;
 import ru.practicum.exploreWithMe.compilation.dto.NewCompilationDto;
 import ru.practicum.exploreWithMe.compilation.dto.UpdateCompilationDto;
 
@@ -18,7 +18,7 @@ import ru.practicum.exploreWithMe.compilation.dto.UpdateCompilationDto;
 @RequestMapping(path = "/admin/compilations")
 @RequiredArgsConstructor
 public class AdminCompilationController {
-    private final AdminCompilationService service;
+    private final CompilationService service;
 
     @PostMapping
     public ResponseEntity<Object> createCompilation(@Valid @RequestBody NewCompilationDto newCompilationDto) {

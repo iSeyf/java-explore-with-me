@@ -3,7 +3,6 @@ package ru.practicum.exploreWithMe.request.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.exploreWithMe.error.exceptions.ConflictException;
-import ru.practicum.exploreWithMe.error.exceptions.NotFoundException;
 import ru.practicum.exploreWithMe.event.model.Event;
 import ru.practicum.exploreWithMe.event.model.State;
 import ru.practicum.exploreWithMe.event.repository.EventRepository;
@@ -27,8 +26,8 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public RequestDto createRequest(long userId, long eventId) {
-        User user = findUser(userId);
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException("Событие не найдено."));
+        User user = userRepository.findUserById(userId);
+        Event event = eventRepository.findEventById(eventId);
 
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new ConflictException("Запросы можно создавать только на опубликованные события.");
@@ -70,10 +69,8 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public RequestDto cancelRequest(long userId, long requestId) {
-        Request request = requestRepository.findById(requestId).orElseThrow(() -> new NotFoundException("Заявка не найдена."));
-        if (request.getRequester().getId() != userId) {
-            throw new RuntimeException();
-        }
+        Request request = requestRepository.findByRequesterIdAndId(userId, requestId);
+
         request.setStatus(Status.CANCELED);
         Request canceledRequest = requestRepository.save(request);
         return RequestMapper.toRequestDto(canceledRequest);
@@ -81,11 +78,7 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public List<RequestDto> getRequests(long userId) {
-        findUser(userId);
+        userRepository.findUserById(userId);
         return RequestMapper.toRequestDtoList(requestRepository.findAllByRequesterId(userId));
-    }
-
-    private User findUser(long userId) {
-        return userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден."));
     }
 }

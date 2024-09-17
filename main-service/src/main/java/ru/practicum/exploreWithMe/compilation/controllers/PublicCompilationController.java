@@ -1,4 +1,4 @@
-package ru.practicum.exploreWithMe.compilation.publicCompilation.controller;
+package ru.practicum.exploreWithMe.compilation.controllers;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -7,13 +7,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.exploreWithMe.compilation.publicCompilation.service.PublicCompilationService;
+import ru.practicum.exploreWithMe.compilation.service.CompilationService;
 
 @RestController
 @RequestMapping(path = "/compilations")
 @RequiredArgsConstructor
 public class PublicCompilationController {
-    private final PublicCompilationService service;
+    private final CompilationService service;
 
     @GetMapping
     public ResponseEntity<Object> getCompilations(@RequestParam(required = false) Boolean pinned,

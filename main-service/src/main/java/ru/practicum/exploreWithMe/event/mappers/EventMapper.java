@@ -28,7 +28,6 @@ public class EventMapper {
         event.setRequestModeration(eventDto.getRequestModeration() != null ? eventDto.getRequestModeration() : true);
         event.setTitle(eventDto.getTitle());
         event.setInitiator(user);
-        event.setViews(0);
         return event;
     }
 
@@ -49,20 +48,21 @@ public class EventMapper {
         eventFullDto.setRequestModeration(event.getRequestModeration());
         eventFullDto.setState(event.getState());
         eventFullDto.setTitle(event.getTitle());
-        eventFullDto.setViews(event.getViews());
         return eventFullDto;
     }
 
     public static EventShortDto toEventShortDto(Event event) {
-        return new EventShortDto(event.getId(),
-                event.getAnnotation(),
-                CategoryMapper.toCategoryDto(event.getCategory()),
-                event.getConfirmedRequests(),
-                event.getEventDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                UserMapper.toUserShortDto(event.getInitiator()),
-                event.isPaid(),
-                event.getTitle(),
-                event.getViews());
+        EventShortDto eventShortDto = new EventShortDto();
+        eventShortDto.setId(event.getId());
+        eventShortDto.setAnnotation(event.getAnnotation());
+        eventShortDto.setCategory(CategoryMapper.toCategoryDto(event.getCategory()));
+        eventShortDto.setConfirmedRequests(event.getConfirmedRequests());
+        eventShortDto.setEventDate(event.getEventDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        eventShortDto.setInitiator(UserMapper.toUserShortDto(event.getInitiator()));
+        eventShortDto.setPaid(event.isPaid());
+        eventShortDto.setTitle(event.getTitle());
+
+        return eventShortDto;
     }
 
     public static List<EventShortDto> toEventShortDtoList(List<Event> events) {

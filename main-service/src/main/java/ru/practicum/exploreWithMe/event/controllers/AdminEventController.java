@@ -1,4 +1,4 @@
-package ru.practicum.exploreWithMe.event.adminEvent.controller;
+package ru.practicum.exploreWithMe.event.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import ru.practicum.exploreWithMe.event.adminEvent.service.AdminEventService;
+import ru.practicum.exploreWithMe.event.service.EventService;
 import ru.practicum.exploreWithMe.event.dto.UpdateEventAdminRequest;
 
 import java.util.List;
@@ -19,7 +19,7 @@ import java.util.List;
 @RequestMapping(path = "/admin/events")
 @RequiredArgsConstructor
 public class AdminEventController {
-    private final AdminEventService service;
+    private final EventService service;
 
     @GetMapping
     public ResponseEntity<Object> searchEvents(@RequestParam(required = false) List<Long> users,
@@ -29,7 +29,7 @@ public class AdminEventController {
                                                @RequestParam(required = false) String rangeEnd,
                                                @RequestParam(required = false, defaultValue = "0") int from,
                                                @RequestParam(required = false, defaultValue = "10") int size) {
-        return ResponseEntity.status(200).body(service.searchEvent(users, states, categories, rangeStart, rangeEnd, from, size));
+        return ResponseEntity.status(200).body(service.searchEventAdmin(users, states, categories, rangeStart, rangeEnd, from, size));
     }
 
     @PatchMapping("/{eventId}")

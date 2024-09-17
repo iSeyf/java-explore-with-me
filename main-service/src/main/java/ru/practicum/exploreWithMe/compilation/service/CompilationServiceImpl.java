@@ -1,6 +1,8 @@
-package ru.practicum.exploreWithMe.compilation.adminCompilation.service;
+package ru.practicum.exploreWithMe.compilation.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.exploreWithMe.compilation.dto.CompilationDto;
 import ru.practicum.exploreWithMe.compilation.dto.NewCompilationDto;
@@ -8,7 +10,6 @@ import ru.practicum.exploreWithMe.compilation.dto.UpdateCompilationDto;
 import ru.practicum.exploreWithMe.compilation.mapper.CompilationMapper;
 import ru.practicum.exploreWithMe.compilation.model.Compilation;
 import ru.practicum.exploreWithMe.compilation.repository.CompilationRepository;
-import ru.practicum.exploreWithMe.error.exceptions.NotFoundException;
 import ru.practicum.exploreWithMe.event.model.Event;
 import ru.practicum.exploreWithMe.event.repository.EventRepository;
 
@@ -17,7 +18,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class AdminCompilationServiceImpl implements AdminCompilationService {
+public class CompilationServiceImpl implements CompilationService {
 
     private final CompilationRepository compilationRepository;
     private final EventRepository eventRepository;
@@ -35,7 +36,7 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
 
     @Override
     public CompilationDto updateCompilation(long compId, UpdateCompilationDto updateCompilationDto) {
-        Compilation oldCompilation = checkCompilation(compId);
+        Compilation oldCompilation = compilationRepository.findCompilationById(compId);
         if (updateCompilationDto.getPinned() != null) {
             oldCompilation.setPinned(updateCompilationDto.getPinned());
         }
@@ -52,11 +53,18 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
 
     @Override
     public void deleteCompilation(long compId) {
-        checkCompilation(compId);
+        compilationRepository.findCompilationById(compId);
         compilationRepository.deleteById(compId);
     }
 
-    private Compilation checkCompilation(long compId) {
-        return compilationRepository.findById(compId).orElseThrow(() -> new NotFoundException("Подборка не найдена"));
+    @Override
+    public List<CompilationDto> getCompilations(Boolean pinned, int from, int size) {
+        Page<Compilation> page = compilationRepository.findByPinned(pinned, PageRequest.of(from, size));
+        return CompilationMapper.toCompilationDtoList(page.toList());
+    }
+
+    @Override
+    public CompilationDto getCompilationById(long compId) {
+        return CompilationMapper.toCompilationDto(compilationRepository.findCompilationById(compId));
     }
 }

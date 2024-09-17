@@ -5,7 +5,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.exploreWithMe.error.exceptions.ConflictException;
-import ru.practicum.exploreWithMe.error.exceptions.NotFoundException;
 import ru.practicum.exploreWithMe.user.dto.NewUserDto;
 import ru.practicum.exploreWithMe.user.dto.UserDto;
 import ru.practicum.exploreWithMe.user.mapper.UserMapper;
@@ -38,7 +37,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(long userId) {
-        repository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден."));
+        repository.findUserById(userId);
         repository.deleteById(userId);
     }
 }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import ru.practicum.exploreWithMe.error.exceptions.NotFoundException;
 import ru.practicum.exploreWithMe.event.model.Event;
 
 import java.time.LocalDateTime;
@@ -37,18 +38,13 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             + "AND (:paid IS NULL OR e.paid = :paid) "
             + "AND (e.eventDate >= :rangeStart AND e.eventDate <= :rangeEnd) "
             + "AND e.state = 'PUBLISHED' "
-            + "AND (e.participantLimit > e.confirmedRequests) "
-            + "ORDER BY "
-            + "CASE WHEN :sort = 'EVENT_DATE' THEN e.eventDate "
-            + "WHEN :sort = 'VIEWS' THEN e.views "
-            + "ELSE NULL END")
+            + "AND (e.participantLimit > e.confirmedRequests) ")
     Page<Event> findAllByPublicFiltersAndOnlyAvailable(
             @Param("text") String text,
             @Param("categories") List<Long> categories,
             @Param("paid") Boolean paid,
             @Param("rangeStart") LocalDateTime rangeStart,
             @Param("rangeEnd") LocalDateTime rangeEnd,
-            @Param("sort") String sort,
             Pageable pageable);
 
     @Query("SELECT e FROM Event e " +
@@ -56,22 +52,20 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             + "AND (:categories IS NULL OR e.category.id IN :categories) "
             + "AND (:paid IS NULL OR e.paid = :paid) "
             + "AND e.eventDate BETWEEN :rangeStart AND :rangeEnd "
-            + "AND e.state = 'PUBLISHED' "
-            + "ORDER BY "
-            + "CASE WHEN :sort = 'EVENT_DATE' THEN e.eventDate "
-            + "ELSE NULL END ASC, "
-            + "CASE WHEN :sort = 'VIEWS' THEN e.views "
-            + "ELSE NULL END DESC")
+            + "AND e.state = 'PUBLISHED' ")
     Page<Event> findAllByPublicFilters(
             @Param("text") String text,
             @Param("categories") List<Long> categories,
             @Param("paid") Boolean paid,
             @Param("rangeStart") LocalDateTime rangeStart,
             @Param("rangeEnd") LocalDateTime rangeEnd,
-            @Param("sort") String sort,
             Pageable pageable
     );
 
     @Query("SELECT e FROM Event e WHERE e.category.id = :categoryId")
     List<Event> findByCategoryId(@Param("categoryId") Long categoryId);
+
+    default Event findEventById(long eventId) {
+        return findById(eventId).orElseThrow(() -> new NotFoundException("Событие не найдено."));
+    }
 }
