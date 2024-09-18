@@ -342,36 +342,14 @@ public class EventServiceImpl implements EventService {
         List<Event> sortEventList = new ArrayList<>(events);
         sortEventList.sort(Comparator.comparing(Event::getPublishedOn));
 
-        ResponseEntity<Object> uriViewStats = statsClient.getStats(
-                sortEventList.get(0).getPublishedOn().minusSeconds(1),
-                LocalDateTime.now(),
-                eventUris,
-                true
-        );
-
-        List<ViewStatsDto> viewStats = new ArrayList<>();
-        if (uriViewStats.getBody() != null) {
-            ObjectMapper objectMapper = new ObjectMapper();
-            try {
-                String json = objectMapper.writeValueAsString(uriViewStats.getBody());
-                viewStats = objectMapper.readValue(json, new TypeReference<List<ViewStatsDto>>() {
-                });
-            } catch (JsonProcessingException e) {
-                throw new CustomJsonProcessingException("Ошибка при обработке JSON");
-            }
-        }
+        List<ViewStatsDto> viewStats = getViewStats(start, end, eventUris);
 
         Map<String, Long> viewsMap = new HashMap<>();
         for (ViewStatsDto stat : viewStats) {
             viewsMap.put(stat.getUri(), stat.getHits());
         }
 
-        statsClient.addHit(new EndpointHitDto(
-                "main-service",
-                request.getRequestURI(),
-                request.getRemoteAddr(),
-                LocalDateTime.now())
-        );
+        addHit(request);
 
         List<EventShortDto> eventShortDtos = new ArrayList<>();
         for (Event event : events) {
@@ -397,28 +375,10 @@ public class EventServiceImpl implements EventService {
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new NotFoundException("Событие с id " + id + " не опубликовано.");
         }
-        statsClient.addHit(new EndpointHitDto(
-                "main-service",
-                request.getRequestURI(),
-                request.getRemoteAddr(),
-                LocalDateTime.now()));
-        ResponseEntity<Object> uriViewStats = statsClient.getStats(
-                event.getPublishedOn().minusSeconds(1),
-                LocalDateTime.now(),
-                List.of(request.getRequestURI()),
-                true
-        );
-        List<ViewStatsDto> viewStats = new ArrayList<>();
-        if (uriViewStats.getBody() != null) {
-            ObjectMapper objectMapper = new ObjectMapper();
-            try {
-                String json = objectMapper.writeValueAsString(uriViewStats.getBody());
-                viewStats = objectMapper.readValue(json, new TypeReference<List<ViewStatsDto>>() {
-                });
-            } catch (JsonProcessingException e) {
-                throw new CustomJsonProcessingException("Ошибка при обработке JSON");
-            }
-        }
+        addHit(request);
+
+        List<ViewStatsDto> viewStats = getViewStats(event.getPublishedOn().minusSeconds(1), LocalDateTime.now(), List.of(request.getRequestURI()));
+
         EventFullDto eventFullDto = EventMapper.toEventFullDto(eventRepository.save(event));
         if (!viewStats.isEmpty()) {
             eventFullDto.setViews(viewStats.get(0).getHits());
@@ -427,5 +387,30 @@ public class EventServiceImpl implements EventService {
         }
 
         return eventFullDto;
+    }
+
+    private void addHit(HttpServletRequest request) {
+        statsClient.addHit(new EndpointHitDto(
+                "main-service",
+                request.getRequestURI(),
+                request.getRemoteAddr(),
+                LocalDateTime.now()
+        ));
+    }
+
+    private List<ViewStatsDto> getViewStats(LocalDateTime start, LocalDateTime end, List<String> uris) {
+        ResponseEntity<Object> uriViewStats = statsClient.getStats(start, end, uris, true);
+        List<ViewStatsDto> viewStats = new ArrayList<>();
+        if (uriViewStats.getBody() != null) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                String json = objectMapper.writeValueAsString(uriViewStats.getBody());
+                viewStats = objectMapper.readValue(json, new TypeReference<List<ViewStatsDto>>() {
+                });
+            } catch (JsonProcessingException e) {
+                throw new CustomJsonProcessingException("Error processing JSON");
+            }
+        }
+        return viewStats;
     }
 }
