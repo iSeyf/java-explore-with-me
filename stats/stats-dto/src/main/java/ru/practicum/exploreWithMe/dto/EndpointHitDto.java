@@ -23,4 +23,11 @@ public class EndpointHitDto {
     @PastOrPresent
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timestamp;
+
+    public EndpointHitDto(String app, String uri, String ip, LocalDateTime timestamp) {
+        this.app = app;
+        this.uri = uri;
+        this.ip = ip;
+        this.timestamp = timestamp;
+    }
 }
