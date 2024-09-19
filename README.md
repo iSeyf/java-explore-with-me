@@ -9,4 +9,4 @@ Feature-subscription:
 * GET-запрос ```http://localhost:8080/users/{userId}/subscriptions/feed``` - лента новостей.
 
 
-Ссылка на Pull request: 
+Ссылка на Pull request: https://github.com/iSeyf/java-explore-with-me/pull/3
