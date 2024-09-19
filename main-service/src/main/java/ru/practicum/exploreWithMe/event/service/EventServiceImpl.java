@@ -1,22 +1,15 @@
 package ru.practicum.exploreWithMe.event.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.practicum.exploreWithMe.category.model.Category;
 import ru.practicum.exploreWithMe.category.repository.CategoryRepository;
-import ru.practicum.exploreWithMe.client.StatsClient;
-import ru.practicum.exploreWithMe.dto.EndpointHitDto;
 import ru.practicum.exploreWithMe.dto.ViewStatsDto;
 import ru.practicum.exploreWithMe.error.exceptions.BadRequestException;
 import ru.practicum.exploreWithMe.error.exceptions.ConflictException;
-import ru.practicum.exploreWithMe.error.exceptions.CustomJsonProcessingException;
 import ru.practicum.exploreWithMe.error.exceptions.NotFoundException;
 import ru.practicum.exploreWithMe.event.dto.EventFullDto;
 import ru.practicum.exploreWithMe.event.dto.EventRequestStatusUpdateRequest;
@@ -37,6 +30,7 @@ import ru.practicum.exploreWithMe.request.mapper.RequestMapper;
 import ru.practicum.exploreWithMe.request.model.Request;
 import ru.practicum.exploreWithMe.request.model.Status;
 import ru.practicum.exploreWithMe.request.repository.RequestRepository;
+import ru.practicum.exploreWithMe.stats.service.StatsService;
 import ru.practicum.exploreWithMe.user.model.User;
 import ru.practicum.exploreWithMe.user.repository.UserRepository;
 
@@ -55,7 +49,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final RequestRepository requestRepository;
-    private final StatsClient statsClient;
+    private final StatsService statsService;
 
     @Override
     public List<EventFullDto> searchEventAdmin(List<Long> users,
@@ -342,14 +336,14 @@ public class EventServiceImpl implements EventService {
         List<Event> sortEventList = new ArrayList<>(events);
         sortEventList.sort(Comparator.comparing(Event::getPublishedOn));
 
-        List<ViewStatsDto> viewStats = getViewStats(start, end, eventUris);
+        List<ViewStatsDto> viewStats = statsService.getViewStats(sortEventList.get(0).getPublishedOn().minusSeconds(1), LocalDateTime.now(), eventUris);
 
         Map<String, Long> viewsMap = new HashMap<>();
         for (ViewStatsDto stat : viewStats) {
             viewsMap.put(stat.getUri(), stat.getHits());
         }
 
-        addHit(request);
+        statsService.addHit(request);
 
         List<EventShortDto> eventShortDtos = new ArrayList<>();
         for (Event event : events) {
@@ -375,9 +369,9 @@ public class EventServiceImpl implements EventService {
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new NotFoundException("Событие с id " + id + " не опубликовано.");
         }
-        addHit(request);
+        statsService.addHit(request);
 
-        List<ViewStatsDto> viewStats = getViewStats(event.getPublishedOn().minusSeconds(1), LocalDateTime.now(), List.of(request.getRequestURI()));
+        List<ViewStatsDto> viewStats = statsService.getViewStats(event.getPublishedOn().minusSeconds(1), LocalDateTime.now(), List.of(request.getRequestURI()));
 
         EventFullDto eventFullDto = EventMapper.toEventFullDto(eventRepository.save(event));
         if (!viewStats.isEmpty()) {
@@ -387,30 +381,5 @@ public class EventServiceImpl implements EventService {
         }
 
         return eventFullDto;
-    }
-
-    private void addHit(HttpServletRequest request) {
-        statsClient.addHit(new EndpointHitDto(
-                "main-service",
-                request.getRequestURI(),
-                request.getRemoteAddr(),
-                LocalDateTime.now()
-        ));
-    }
-
-    private List<ViewStatsDto> getViewStats(LocalDateTime start, LocalDateTime end, List<String> uris) {
-        ResponseEntity<Object> uriViewStats = statsClient.getStats(start, end, uris, true);
-        List<ViewStatsDto> viewStats = new ArrayList<>();
-        if (uriViewStats.getBody() != null) {
-            ObjectMapper objectMapper = new ObjectMapper();
-            try {
-                String json = objectMapper.writeValueAsString(uriViewStats.getBody());
-                viewStats = objectMapper.readValue(json, new TypeReference<List<ViewStatsDto>>() {
-                });
-            } catch (JsonProcessingException e) {
-                throw new CustomJsonProcessingException("Error processing JSON");
-            }
-        }
-        return viewStats;
     }
 }

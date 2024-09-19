@@ -65,6 +65,9 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     @Query("SELECT e FROM Event e WHERE e.category.id = :categoryId")
     List<Event> findByCategoryId(@Param("categoryId") Long categoryId);
 
+    @Query("SELECT e FROM Event e WHERE e.initiator.id IN :subscribedUsers AND e.state = 'PUBLISHED' ORDER BY e.publishedOn DESC")
+    Page<Event> getFeed(@Param("subscribedUsers") List<Long> subscribedUsers, Pageable pageable);
+
     default Event findEventById(long eventId) {
         return findById(eventId).orElseThrow(() -> new NotFoundException("Событие не найдено."));
     }
